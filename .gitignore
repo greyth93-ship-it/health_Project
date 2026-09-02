@@ -58,3 +58,5 @@ CLAUDE.md
 
 # 디자인 시스템 산출물
 design_system_final.html
+# README는 *.md 제외 규칙에서 예외
+!README.md
