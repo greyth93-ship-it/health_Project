@@ -100,5 +100,6 @@ npm install && npm run dev  # :5173
 
 ## 참고
 
+- **전체 포트폴리오**: [docs/portfolio.html](docs/portfolio.html) — 두 프로젝트의 담당 기능을 실제 화면과 함께 정리한 단일 HTML(다운로드 후 브라우저에서 열기)
 - 기획·도메인 규칙 문서(`CLAUDE.md` 등)는 `.gitignore`의 `*.md` 규칙으로 저장소에 포함되지 않습니다(로컬 관리).
 - 배포 서버는 팀 프로젝트 종료 후 정리했습니다. 데모는 로컬 실행으로 재현합니다.
