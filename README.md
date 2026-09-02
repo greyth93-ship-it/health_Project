@@ -33,7 +33,7 @@
 | DB | PostgreSQL (Supabase), `h_` 접두 테이블 |
 | AI | Claude Tool Use — 백엔드 오케스트레이터가 도구 실행·권한·테넌트 격리를 강제 |
 
-## 내가 만든 것 (구영주)
+## 내가 만든 것
 
 ### 백엔드 `healthcareBack/app/src/main/java/com/health/app`
 
@@ -93,7 +93,7 @@ npm install && npm run dev  # :5173
 
 | 영역 | 담당 |
 |---|---|
-| 계약 · 대시보드 · AI 비서 · 인증/쿠폰/알림/건의 · 디자인 시스템 | **구영주** |
+| 계약 · 대시보드 · AI 비서 · 인증/쿠폰/알림/건의 · 디자인 시스템 | **본인** |
 | 정산·결제·물품 관리 | 팀원 |
 | 회원/직원 관리·출석·리포트 화면 | 팀원 |
 | 이탈 예측 ML(healthModel) | 팀원 |
