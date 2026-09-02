@@ -33,7 +33,7 @@
 | DB | PostgreSQL (Supabase), `h_` 접두 테이블 |
 | AI | Claude Tool Use — 백엔드 오케스트레이터가 도구 실행·권한·테넌트 격리를 강제 |
 
-## 내가 만든 것 (구영주)
+## 내가 만든 것
 
 ### 백엔드 `healthcareBack/app/src/main/java/com/health/app`
 
