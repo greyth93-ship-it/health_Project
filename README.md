@@ -24,8 +24,6 @@
 | ![대시보드](docs/screenshots/health_dashboard.jpg) | ![AI 비서](docs/screenshots/health_ai_drawer.jpg) |
 | **계약 관리 (유형 5종 · 상세 드로어)** | **계약 발행폼 (서버 측 유형 판정)** |
 | ![계약](docs/screenshots/health_contract_drawer.jpg) | ![계약 발행](docs/screenshots/health_contract_new.jpg) |
-| **프로모션 (쿠폰 통계 · 일괄 발송)** | **쿠폰 대상 선택 (이탈율 순)** |
-| ![프로모션](docs/screenshots/health_promotion.jpg) | ![쿠폰 대상](docs/screenshots/health_coupon.jpg) |
 
 ## 아키텍처
 
@@ -38,7 +36,7 @@
 
 | 계층 | 스택 |
 |---|---|
-| 백엔드 | Java 21, Spring Boot 3.5, MyBatis, Spring Security(JWT), BCrypt, SseEmitter, Anthropic Java SDK |
+| 백엔드 | Java 21, Spring Boot 3.5, MyBatis, Spring Security(JWT), SseEmitter(AI 스트리밍), Anthropic Java SDK |
 | 프론트 | React 19, Vite, react-router-dom 7, CSS 디자인 토큰(`src/index.css` 단일 원천), ESLint |
 | DB | PostgreSQL (Supabase), `h_` 접두 테이블 |
 | AI | Claude Tool Use — 백엔드 오케스트레이터가 도구 실행·권한·테넌트 격리를 강제 |
@@ -52,11 +50,8 @@
 | `contract` | 계약 유형 5종(제휴·임금·이용권·PT·PT 체험)의 발행·서명·상태 전이(`DRAFT→ISSUED→SIGNED→ACTIVE→TERMINATED`), 역할별 리스트·서버 페이징·검색, 미가입 수신자 자동가입을 서명과 한 트랜잭션으로 처리, 만료 sweep |
 | `dashboard` | OWNER 위젯 7종 집계(각 도메인 서비스를 주입해 호출), 사용자별 위젯 on/off·순서 저장, 데이터 없음 위젯 409 잠금 |
 | `ai` | Claude Tool Use 오케스트레이터 — 화이트리스트 READ 도구 9종을 서비스 메서드에 직접 바인딩, `gym_id`/`username`은 LLM 인자를 버리고 JWT에서 주입, 전 도구 호출 감사 로그(`h_ai_tool_audit`), 권한 없는 역할은 LLM 호출 전 차단, SSE 턴 단위 스트리밍, 크레딧 소진 시 ADMIN 알림 |
-| `member` | 로그인/가입/수정 API, 전화번호 뒤 8자리 식별자 정규화, JWT Access/Refresh 발급, BCrypt. **운영 DB 회원 1,274명의 평문 비밀번호를 건별 오토커밋 방식으로 무중단 마이그레이션**(단일 트랜잭션은 BCrypt 비용 누적으로 커넥션 타임아웃 → 재실행 가능한 구조로 전환, 완료 후 임시 코드 영구 삭제) |
-| `coupon` | 쿠폰 유형 등록·통계, 다중 회원 발송, 미사용 동일 쿠폰 보유자 중복 발송 차단(`checkDuplicateUnused`), 만료 배치 |
-| `alarm` | SSE 구독(`/alarm/subscribe`)·`SseEmitter` 풀 푸시, 알림 클릭 이동 경로(link), 1개월 경과 알림 자동 정리 |
-| `complaint` | 회원 건의 등록(요청자 사칭 검증)·사장님 목록·처리 상태 변경 |
-| `config` | CORS 허용 주소 환경변수화(`FRONTEND_SERVER_URL`, 콤마 구분), BCrypt 빈 |
+| 운영 데이터 정비 | **운영 DB 회원 1,274명의 평문 비밀번호를 건별 오토커밋 방식으로 무중단 BCrypt 전환**(단일 트랜잭션은 BCrypt 비용 누적으로 커넥션 타임아웃 → 중단돼도 이어서 재실행 가능한 구조, 완료 후 임시 핸들러·일회성 SQL 영구 삭제). 계약 금액 단위 불일치(결제 원 / 계약 만원) 발견 → `amount` 1,288행 ×10,000 정합, 이미 원 단위였던 4건은 결제 대조로 제외 |
+| `config` | CORS 허용 주소 환경변수화(`FRONTEND_SERVER_URL`, 콤마 구분) |
 
 ### 프론트 `healthcareFront/src`
 
@@ -64,9 +59,7 @@
 - `ai/AiChat.jsx`, `ai/AiPanel.jsx` — 드로어 AI 탭, 플로팅 입력바, 차트/리스트 카드, 바로가기 버튼(레지스트리 메타 기반)
 - 계약 — `Contractpage.jsx`(서버 페이징·칩 필터·검색), `ContractNew.jsx`(통합 발행폼), `ContractDetail.jsx`(서명 패드·이력), `TrialTargetPage.jsx`
 - `Dashboard.jsx` — 위젯 7종 렌더, 편집 모달(드래그 순서 변경), AI 질문 카드·태스크 브리핑
-- `B2bPromotion.jsx`, `B2bCoupon.jsx` — 쿠폰 등록·통계, `Promise.all` 일괄 발송과 실패 대상자 피드백, 이탈율 순 대상 선택
-- `Join.jsx`, `Header.jsx`(알림 클릭 → 화면 이동), `AdminMain.jsx`(역할별 탭 필터), `B2bComplaint.jsx`/`B2cComplaint.jsx`
-- 디자인 시스템 — `index.css` 토큰(색·타이포·라운드·간격·보더) 단일 원천, 하드코딩 색상 416회 수렴, `components/Button.css` 공용 버튼, `components/B2bDrawer.jsx` 우측 통합 드로어
+- 디자인 시스템 — `index.css` 토큰(색·타이포·라운드·간격·보더) 단일 원천, 하드코딩 색상 416회 수렴, 타이포 스케일 Apple HIG 기준 11종 개편(573건 치환), `components/Button.css` 공용 버튼, `components/B2bDrawer.jsx` 우측 통합 드로어, 전 화면 리스킨(정산 요약 레일 · 리스트 빈 상태 공통 규격 등, API 무변경)
 
 ### 설계 원칙
 
@@ -103,9 +96,10 @@ npm install && npm run dev  # :5173
 
 | 영역 | 담당 |
 |---|---|
-| 계약 · 대시보드 · AI 비서 · 인증/쿠폰/알림/건의 · 디자인 시스템 | **본인** |
+| 계약 · 대시보드 · AI 비서 · 디자인 시스템 · 중첩 라우팅 · 운영 데이터 정비 | **본인** |
+| 회원 인증(JWT 발급) · 쿠폰 · 알림(SSE) · 건의사항 | 팀원 |
 | 정산·결제·물품 관리 | 팀원 |
-| 회원/직원 관리·출석·리포트 화면 | 팀원 |
+| 회원/직원 관리·출석(아바타)·리포트 화면 | 팀원 |
 | 이탈 예측 ML(healthModel) | 팀원 |
 
 ## 참고
